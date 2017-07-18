@@ -123,4 +123,4 @@ sleep 1
 cd /opt
 mv vlb.sh /etc/init.d
 update-rc.d vlb.sh defaults
-#./v_lb_init.sh
+./v_lb_init.sh
