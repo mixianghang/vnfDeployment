@@ -38,6 +38,7 @@ HWADDR2=$(ifconfig eth2 | grep HWaddr | tr -s ' ' | cut -d' ' -f5)
 FAKE_HWADDR1=$(echo -n 00; dd bs=1 count=5 if=/dev/urandom 2>/dev/null |hexdump -v -e '/1 ":%02X"')
 FAKE_HWADDR2=$(echo -n 00; dd bs=1 count=5 if=/dev/urandom 2>/dev/null |hexdump -v -e '/1 ":%02X"')
 #GW=$(route -n | grep "^0.0.0.0" | awk '{print $2}')
+GW=$(cat /opt/config/local_private_ipaddr3.txt)
 
 ifconfig eth1 down
 ifconfig eth2 down

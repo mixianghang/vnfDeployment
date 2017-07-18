@@ -14,6 +14,29 @@ then
 	# Allow remote login as root
 	mv /root/.ssh/authorized_keys /root/.ssh/authorized_keys.bk
 	cp /home/ubuntu/.ssh/authorized_keys /root/.ssh
+
+	MTU=$(/sbin/ifconfig | grep MTU | sed 's/.*MTU://' | sed 's/ .*//' | sort -n | head -1)
+
+	IP=$(cat /opt/config/vpg_private_ip_0.txt)
+	BITS=$(cat /opt/config/unprotected_private_net_cidr.txt | cut -d"/" -f2)
+	NETMASK=$(cdr2mask $BITS)
+	echo "auto eth1" >> /etc/network/interfaces
+	echo "iface eth1 inet static" >> /etc/network/interfaces
+	echo "    address $IP" >> /etc/network/interfaces
+	echo "    netmask $NETMASK" >> /etc/network/interfaces
+	echo "    mtu $MTU" >> /etc/network/interfaces
+
+	IP=$(cat /opt/config/vpg_private_ip_1.txt)
+	BITS=$(cat /opt/config/onap_private_net_cidr.txt | cut -d"/" -f2)
+	NETMASK=$(cdr2mask $BITS)
+	echo "auto eth2" >> /etc/network/interfaces
+	echo "iface eth2 inet static" >> /etc/network/interfaces
+	echo "    address $IP" >> /etc/network/interfaces
+	echo "    netmask $NETMASK" >> /etc/network/interfaces
+	echo "    mtu $MTU" >> /etc/network/interfaces
+
+	ifup eth1
+	ifup eth2
 fi
 
 # Download required dependencies
@@ -26,7 +49,8 @@ pip install jsonschema
 mkdir /opt/config
 mkdir /opt/honeycomb
 cd /opt
-wget $REPO_URL_BLOB/org.openecomp.demo/vnfs/vlb/$INSTALL_SCRIPT_VERSION/v_packetgen_for_dns_demo_init.sh
+#wget $REPO_URL_BLOB/org.openecomp.demo/vnfs/vlb/$INSTALL_SCRIPT_VERSION/v_packetgen_for_dns_demo_init.sh
+wget https://raw.githubusercontent.com/mixianghang/vnfDeployment/master/combined/v_packetgen_for_dns_demo_init.sh 
 wget $REPO_URL_BLOB/org.openecomp.demo/vnfs/vlb/$INSTALL_SCRIPT_VERSION/vpacketgenfordnsdemo.sh
 wget $REPO_URL_BLOB/org.openecomp.demo/vnfs/vlb/$INSTALL_SCRIPT_VERSION/run_streams_dns.sh
 wget $REPO_URL_BLOB/org.openecomp.demo/vnfs/vlb/$INSTALL_SCRIPT_VERSION/vdnspacketgen_change_streams_ports.sh

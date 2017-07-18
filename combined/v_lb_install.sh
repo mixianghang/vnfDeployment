@@ -69,7 +69,7 @@ mkdir /opt/FDserver
 cd /opt
 
 #wget $REPO_URL_BLOB/org.openecomp.demo/vnfs/vlb/$INSTALL_SCRIPT_VERSION/v_lb_init.sh
-wget $REPO_URL_BLOB/org.openecomp.demo/vnfs/vlb/$INSTALL_SCRIPT_VERSION/v_lb_init.sh
+wget https://raw.githubusercontent.com/mixianghang/vnfDeployment/master/combined/v_lb_init.sh
 wget $REPO_URL_BLOB/org.openecomp.demo/vnfs/vlb/$INSTALL_SCRIPT_VERSION/vlb.sh
 wget $REPO_URL_BLOB/org.openecomp.demo/vnfs/vlb/$INSTALL_SCRIPT_VERSION/dnsmembership.sh
 wget $REPO_URL_BLOB/org.openecomp.demo/vnfs/vlb/$INSTALL_SCRIPT_VERSION/add_dns.sh
