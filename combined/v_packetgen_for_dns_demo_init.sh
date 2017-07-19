@@ -25,9 +25,6 @@ mask2cidr() {
     echo "$nbits"
 }
 
-IPADDR1_MASK=$(ifconfig eth0 | grep "Mask" | awk '{print $4}' | awk -F ":" '{print $2}')
-IPADDR1_CIDR=$(mask2cidr $IPADDR1_MASK)
-
 # Configure VPP for vPacketGenerator
 IPADDR1=$(ifconfig eth1 | grep "inet addr" | tr -s ' ' | cut -d' ' -f3 | cut -d':' -f2)
 HWADDR1=$(ifconfig eth1 | grep HWaddr | tr -s ' ' | cut -d' ' -f5)

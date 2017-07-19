@@ -39,6 +39,7 @@ FAKE_HWADDR1=$(echo -n 00; dd bs=1 count=5 if=/dev/urandom 2>/dev/null |hexdump 
 FAKE_HWADDR2=$(echo -n 00; dd bs=1 count=5 if=/dev/urandom 2>/dev/null |hexdump -v -e '/1 ":%02X"')
 #GW=$(route -n | grep "^0.0.0.0" | awk '{print $2}')
 GW=$(cat /opt/config/local_private_ipaddr3.txt)
+sourceCIDR=$(cat /opt/config/vlb_private_net_cidr3.txt)
 
 ifconfig eth1 down
 ifconfig eth2 down
@@ -62,13 +63,13 @@ brctl addif br1 tap222
 brctl addif br1 eth2
 ifconfig br0 up
 ifconfig br1 up
+vppctl ip route add $sourceCIDR via $GW
 sleep 1
 
 
 
 vppctl lb conf ip4-src-address $IPADDR2
 vppctl lb vip $IPADDR1"/32" encap gre4
-vppctl ip route add 0.0.0.0/0 via 192.168.20.100
 sleep 1
 
 cd /opt/FDserver
