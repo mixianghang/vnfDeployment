@@ -1,10 +1,12 @@
 #!/bin/bash
-
 REPO_URL_BLOB=$(cat /opt/config/repo_url_blob.txt)
 REPO_URL_ARTIFACTS=$(cat /opt/config/repo_url_artifacts.txt)
 DEMO_ARTIFACTS_VERSION=$(cat /opt/config/demo_artifacts_version.txt)
 INSTALL_SCRIPT_VERSION=$(cat /opt/config/install_script_version.txt)
 CLOUD_ENV=$(cat /opt/config/cloud_env.txt)
+sfcName=$(cat /opt/config/sfcName.txt)
+nfName=$(cat /opt/config/sfcName.txt)
+curl -X GET "http://52.25.75.104/monitor.php?sfc=$sfcName&nf=$nfName&event=vmInited"
 
 # Convert Network CIDR to Netmask
 cdr2mask () {
@@ -91,4 +93,6 @@ sleep 1
 cd /opt
 mv vpacketgenfordnsdemo.sh /etc/init.d
 update-rc.d vpacketgenfordnsdemo.sh defaults
+curl -X GET "http://52.25.75.104/monitor.php?sfc=$sfcName&nf=$nfName&event=nfInited"
 ./v_packetgen_for_dns_demo_init.sh
+curl -X GET "http://52.25.75.104/monitor.php?sfc=$sfcName&nf=$nfName&event=nfStarted"

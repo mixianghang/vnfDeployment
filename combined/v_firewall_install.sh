@@ -1,14 +1,15 @@
 #!/bin/bash
 
-sfcName=$(cat /opt/config/sfcName.txt)
-nfName=$(cat /opt/config/sfcName.txt)
 REPO_URL_BLOB=$(cat /opt/config/repo_url_blob.txt)
 REPO_URL_ARTIFACTS=$(cat /opt/config/repo_url_artifacts.txt)
 DEMO_ARTIFACTS_VERSION=$(cat /opt/config/demo_artifacts_version.txt)
 INSTALL_SCRIPT_VERSION=$(cat /opt/config/install_script_version.txt)
 CLOUD_ENV=$(cat /opt/config/cloud_env.txt)
-
+sfcName=$(cat /opt/config/sfcName.txt)
+nfName=$(cat /opt/config/sfcName.txt)
 curl -X GET "http://52.25.75.104/monitor.php?sfc=$sfcName&nf=$nfName&event=vmInited"
+
+
 # Convert Network CIDR to Netmask
 cdr2mask () {
 	# Number of args to shift, 255..255, first non-255 byte, zeroes
@@ -28,8 +29,8 @@ then
 
 	MTU=$(/sbin/ifconfig | grep MTU | sed 's/.*MTU://' | sed 's/ .*//' | sort -n | head -1)
 
-	IP=$(cat /opt/config/local_private_ipaddr.txt)
-	BITS=$(cat /opt/config/vlb_private_net_cidr.txt | cut -d"/" -f2)
+	IP=$(cat /opt/config/vfw_private_ip_0.txt)
+	BITS=$(cat /opt/config/unprotected_private_net_cidr.txt | cut -d"/" -f2)
 	NETMASK=$(cdr2mask $BITS)
 	echo "auto eth1" >> /etc/network/interfaces
 	echo "iface eth1 inet static" >> /etc/network/interfaces
@@ -37,8 +38,8 @@ then
 	echo "    netmask $NETMASK" >> /etc/network/interfaces
 	echo "    mtu $MTU" >> /etc/network/interfaces
 
-	IP=$(cat /opt/config/local_private_ipaddr2.txt)
-	BITS=$(cat /opt/config/vlb_private_net_cidr2.txt | cut -d"/" -f2)
+	IP=$(cat /opt/config/vfw_private_ip_1.txt)
+	BITS=$(cat /opt/config/protected_private_net_cidr.txt | cut -d"/" -f2)
 	NETMASK=$(cdr2mask $BITS)
 	echo "auto eth2" >> /etc/network/interfaces
 	echo "iface eth2 inet static" >> /etc/network/interfaces
@@ -46,7 +47,7 @@ then
 	echo "    netmask $NETMASK" >> /etc/network/interfaces
 	echo "    mtu $MTU" >> /etc/network/interfaces
 
-	IP=$(cat /opt/config/oam_private_ipaddr.txt)
+	IP=$(cat /opt/config/vfw_private_ip_2.txt)
 	BITS=$(cat /opt/config/onap_private_net_cidr.txt | cut -d"/" -f2)
 	NETMASK=$(cdr2mask $BITS)
 	echo "auto eth3" >> /etc/network/interfaces
@@ -63,51 +64,30 @@ fi
 # Download required dependencies
 add-apt-repository -y ppa:openjdk-r/ppa
 apt-get update
-apt-get install -y make gcc wget openjdk-8-jdk bridge-utils libcurl4-openssl-dev apt-transport-https ca-certificates
-sleep 1
+apt-get install -y make wget openjdk-8-jdk gcc libcurl4-openssl-dev python-pip bridge-utils apt-transport-https ca-certificates
+pip install jsonschema
 
-# Download vLB demo code for load balancer
-mkdir /opt/config
-mkdir /opt/FDserver
+# Download artifacts for virtual firewall
+mkdir /opt/honeycomb
 cd /opt
 
-#wget $REPO_URL_BLOB/org.openecomp.demo/vnfs/vlb/$INSTALL_SCRIPT_VERSION/v_lb_init.sh
-wget https://raw.githubusercontent.com/mixianghang/vnfDeployment/master/combined/v_lb_init.sh
-wget $REPO_URL_BLOB/org.openecomp.demo/vnfs/vlb/$INSTALL_SCRIPT_VERSION/vlb.sh
-wget $REPO_URL_BLOB/org.openecomp.demo/vnfs/vlb/$INSTALL_SCRIPT_VERSION/dnsmembership.sh
-wget https://raw.githubusercontent.com/mixianghang/vnfDeployment/master/combined/add_dns.sh
-wget https://raw.githubusercontent.com/mixianghang/vnfDeployment/master/combined/remove_dns.sh
-#wget $REPO_URL_BLOB/org.openecomp.demo/vnfs/vlb/$INSTALL_SCRIPT_VERSION/add_dns.sh
-#wget $REPO_URL_BLOB/org.openecomp.demo/vnfs/vlb/$INSTALL_SCRIPT_VERSION/remove_dns.sh
-wget $REPO_URL_ARTIFACTS/org/openecomp/demo/vnf/vlb/dns-manager/$DEMO_ARTIFACTS_VERSION/dns-manager-$DEMO_ARTIFACTS_VERSION.jar
+wget $REPO_URL_BLOB/org.openecomp.demo/vnfs/vfw/$INSTALL_SCRIPT_VERSION/v_firewall_init.sh
+wget $REPO_URL_BLOB/org.openecomp.demo/vnfs/vfw/$INSTALL_SCRIPT_VERSION/vfirewall.sh
+wget $REPO_URL_ARTIFACTS/org/openecomp/demo/vnf/sample-distribution/$DEMO_ARTIFACTS_VERSION/sample-distribution-$DEMO_ARTIFACTS_VERSION-hc.tar.gz
 wget $REPO_URL_ARTIFACTS/org/openecomp/demo/vnf/ves/ves/$DEMO_ARTIFACTS_VERSION/ves-$DEMO_ARTIFACTS_VERSION-demo.tar.gz
-wget $REPO_URL_ARTIFACTS/org/openecomp/demo/vnf/ves/ves_vlb_reporting/$DEMO_ARTIFACTS_VERSION/ves_vlb_reporting-$DEMO_ARTIFACTS_VERSION-demo.tar.gz
+wget $REPO_URL_ARTIFACTS/org/openecomp/demo/vnf/ves/ves_vfw_reporting/$DEMO_ARTIFACTS_VERSION/ves_vfw_reporting-$DEMO_ARTIFACTS_VERSION-demo.tar.gz
 
 tar -zxvf ves-$DEMO_ARTIFACTS_VERSION-demo.tar.gz
 mv ves-$DEMO_ARTIFACTS_VERSION VES
-tar -zxvf ves_vlb_reporting-$DEMO_ARTIFACTS_VERSION-demo.tar.gz
-mv ves_vlb_reporting-$DEMO_ARTIFACTS_VERSION VESreporting_vLB
-
-mv VESreporting_vLB /opt/VES/code/evel_training/VESreporting
-mv dns-manager-$DEMO_ARTIFACTS_VERSION.jar /opt/FDserver/dns-manager-$DEMO_ARTIFACTS_VERSION.jar
-mv dnsmembership.sh /opt/FDserver/dnsmembership.sh
-mv add_dns.sh /opt/FDserver/add_dns.sh
-mv remove_dns.sh /opt/FDserver/remove_dns.sh
+tar -zxvf ves_vfw_reporting-$DEMO_ARTIFACTS_VERSION-demo.tar.gz
+mv ves_vfw_reporting-$DEMO_ARTIFACTS_VERSION VESreporting_vFW
+tar -zxvf sample-distribution-$DEMO_ARTIFACTS_VERSION-hc.tar.gz
+mv sample-distribution-$DEMO_ARTIFACTS_VERSION honeycomb
+sed -i 's/"restconf-binding-address": "127.0.0.1",/"restconf-binding-address": "0.0.0.0",/g' honeycomb/sample-distribution-$DEMO_ARTIFACTS_VERSION/config/honeycomb.json
+mv VESreporting_vFW /opt/VES/code/evel_training/VESreporting
 rm *.tar.gz
-
-chmod +x v_lb_init.sh
-chmod +x vlb.sh
-chmod +x /opt/VES/code/evel_training/VESreporting/go-client.sh
-chmod +x /opt/FDserver/dnsmembership.sh
-chmod +x /opt/FDserver/add_dns.sh
-chmod +x /opt/FDserver/remove_dns.sh
-
-# Create a file with public IP of the VM if it doesn't exist. This is for VMs directly attached to the external network.
-if [ ! -e /opt/config/local_public_ipaddr.txt ]
-then
-	IP_ADDRESS=$(ifconfig eth1 | grep "inet addr" | tr -s ' ' | cut -d' ' -f3 | cut -d':' -f2)
-	echo $IP_ADDRESS > /opt/config/local_public_ipaddr.txt
-fi
+chmod +x v_firewall_init.sh
+chmod +x vfirewall.sh
 
 # Install VPP
 export UBUNTU="trusty"
@@ -126,8 +106,8 @@ sleep 1
 
 # Run instantiation script
 cd /opt
-mv vlb.sh /etc/init.d
-update-rc.d vlb.sh defaults
+mv vfirewall.sh /etc/init.d
+update-rc.d vfirewall.sh defaults
 curl -X GET "http://52.25.75.104/monitor.php?sfc=$sfcName&nf=$nfName&event=nfInited"
-./v_lb_init.sh
+./v_firewall_init.sh
 curl -X GET "http://52.25.75.104/monitor.php?sfc=$sfcName&nf=$nfName&event=nfStarted"
