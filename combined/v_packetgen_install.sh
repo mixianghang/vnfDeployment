@@ -5,7 +5,7 @@ DEMO_ARTIFACTS_VERSION=$(cat /opt/config/demo_artifacts_version.txt)
 INSTALL_SCRIPT_VERSION=$(cat /opt/config/install_script_version.txt)
 CLOUD_ENV=$(cat /opt/config/cloud_env.txt)
 sfcName=$(cat /opt/config/sfcName.txt)
-nfName=$(cat /opt/config/sfcName.txt)
+nfName=$(cat /opt/config/nfName.txt)
 curl -X GET "http://52.25.75.104/monitor.php?sfc=$sfcName&nf=$nfName&event=vmInited"
 
 # Convert Network CIDR to Netmask
